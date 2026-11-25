@@ -1,8 +1,7 @@
 /**
  * ESSAM HASHEM — PROFESSIONAL PORTFOLIO JAVASCRIPT
- * Capabilities: Bilingual Localization (EN / AR RTL), Theme System (Dark / Light),
- * Mobile Navigation, Scroll-Spy, Scroll Animations, Numerical Counters,
- * Project Modals, and Localized Contact Form Validation.
+ * Capabilities: Bilingual Localization (AR RTL / EN LTR), Theme System (Dark / Light),
+ * Mobile Navigation Drawer, Scroll-Spy, Scroll Animations, Certificate Lightbox Modal.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -11,15 +10,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const htmlElement = document.documentElement;
 
   /* ===================================================================
-     1. BILINGUAL SYSTEM (ENGLISH / ARABIC WITH RTL SUPPORT)
+     1. BILINGUAL SYSTEM (ARABIC DEFAULT RTL / ENGLISH LTR)
      =================================================================== */
   const langToggleBtn = document.getElementById('lang-toggle-btn');
   const langToggleText = document.getElementById('lang-toggle-text');
   const mobileLangToggleBtn = document.getElementById('mobile-lang-toggle-btn');
   const mobileLangToggleText = document.getElementById('mobile-lang-toggle-text');
 
-  // Retrieve stored language or default to 'en'
-  let currentLang = localStorage.getItem('eh_portfolio_lang') || 'en';
+  // Retrieve stored language or default to 'ar'
+  let currentLang = localStorage.getItem('eh_portfolio_lang') || 'ar';
 
   // Helper to reliably access translation dictionary
   function getTranslations(lang) {
@@ -40,18 +39,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const isArabic = lang === 'ar';
 
     // Set HTML attributes for direction & language
-    document.documentElement.setAttribute('lang', lang);
-    document.documentElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
-    document.documentElement.lang = lang;
-    document.documentElement.dir = isArabic ? 'rtl' : 'ltr';
+    htmlElement.setAttribute('lang', lang);
+    htmlElement.setAttribute('dir', isArabic ? 'rtl' : 'ltr');
+    htmlElement.lang = lang;
+    htmlElement.dir = isArabic ? 'rtl' : 'ltr';
 
     // Update Language Toggle Button UI (Navbar)
     if (langToggleText) {
-      langToggleText.textContent = dict.lang_btn_text;
+      langToggleText.textContent = isArabic ? 'EN' : 'عربي';
     }
     if (langToggleBtn) {
-      langToggleBtn.setAttribute('title', dict.lang_btn_title);
-      langToggleBtn.setAttribute('aria-label', dict.lang_btn_title);
+      const btnTitle = isArabic ? 'Switch to English' : 'التبديل إلى العربية';
+      langToggleBtn.setAttribute('title', btnTitle);
+      langToggleBtn.setAttribute('aria-label', btnTitle);
     }
 
     // Update Mobile Drawer Language Toggle Button UI
@@ -74,21 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const key = el.getAttribute('data-i18n');
       if (dict[key] !== undefined) {
         const val = dict[key];
-        // If string contains HTML (e.g. <strong>), use innerHTML, else textContent
         if (typeof val === 'string' && val.includes('<') && val.includes('>')) {
           el.innerHTML = val;
         } else {
           el.textContent = val;
         }
-      }
-    });
-
-    // Update all input placeholders with data-i18n-ph
-    const i18nPlaceholders = document.querySelectorAll('[data-i18n-ph]');
-    i18nPlaceholders.forEach(el => {
-      const key = el.getAttribute('data-i18n-ph');
-      if (dict[key] !== undefined) {
-        el.setAttribute('placeholder', dict[key]);
       }
     });
 
@@ -99,25 +89,26 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize language on DOM ready
   setLanguage(currentLang);
 
-  // Desktop/Header Toggle Button Click
+  // Desktop Header Language Toggle Button Click
   if (langToggleBtn) {
     langToggleBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      const newLang = currentLang === 'en' ? 'ar' : 'en';
+      const newLang = currentLang === 'ar' ? 'en' : 'ar';
       setLanguage(newLang);
     });
   }
 
-  // Mobile Drawer Toggle Button Click
+  // Mobile Drawer Language Toggle Button Click
   if (mobileLangToggleBtn) {
     mobileLangToggleBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      const newLang = currentLang === 'en' ? 'ar' : 'en';
+      const newLang = currentLang === 'ar' ? 'en' : 'ar';
       setLanguage(newLang);
+      closeMobileMenu();
     });
   }
 
-  // Expose setLanguage globally for console testing
+  // Expose setLanguage globally for testing
   window.setPortfolioLanguage = setLanguage;
 
   /* ===================================================================
@@ -148,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ===================================================================
-     3. HEADER SCROLL STATE & STICKY BEHAVIOR
+     3. HEADER SCROLL STATE & FLOATING BACK-TO-TOP
      =================================================================== */
   const header = document.getElementById('header');
   const floatingBackToTop = document.getElementById('floating-back-to-top');
@@ -158,9 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function handleScrollEvents() {
     const scrollY = window.scrollY;
 
-    // Header class on scroll
+    // Header scrolled style
     if (header) {
-      if (scrollY > 40) {
+      if (scrollY > 30) {
         header.classList.add('scrolled');
       } else {
         header.classList.remove('scrolled');
@@ -169,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Floating Back to Top Button visibility
     if (floatingBackToTop) {
-      if (scrollY > 450) {
+      if (scrollY > 400) {
         floatingBackToTop.classList.add('visible');
       } else {
         floatingBackToTop.classList.remove('visible');
@@ -182,6 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
      =================================================================== */
   const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
   const mobileNavDrawer = document.getElementById('mobile-nav-drawer');
+  const mobileDrawerClose = document.getElementById('mobile-drawer-close');
   const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
 
   if (mobileMenuToggle && mobileNavDrawer) {
@@ -194,11 +186,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    if (mobileDrawerClose) {
+      mobileDrawerClose.addEventListener('click', closeMobileMenu);
+    }
+
     // Close when clicking any link inside the mobile drawer
     mobileNavLinks.forEach(link => {
-      link.addEventListener('click', () => {
-        closeMobileMenu();
-      });
+      link.addEventListener('click', closeMobileMenu);
     });
 
     // Close on outside click
@@ -212,16 +206,24 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function openMobileMenu() {
-    mobileNavDrawer.classList.add('open');
-    mobileNavDrawer.setAttribute('aria-hidden', 'false');
-    mobileMenuToggle.setAttribute('aria-expanded', 'true');
+    if (mobileNavDrawer) {
+      mobileNavDrawer.classList.add('open');
+      mobileNavDrawer.setAttribute('aria-hidden', 'false');
+    }
+    if (mobileMenuToggle) {
+      mobileMenuToggle.setAttribute('aria-expanded', 'true');
+    }
     document.body.style.overflow = 'hidden';
   }
 
   function closeMobileMenu() {
-    mobileNavDrawer.classList.remove('open');
-    mobileNavDrawer.setAttribute('aria-hidden', 'true');
-    mobileMenuToggle.setAttribute('aria-expanded', 'false');
+    if (mobileNavDrawer) {
+      mobileNavDrawer.classList.remove('open');
+      mobileNavDrawer.setAttribute('aria-hidden', 'true');
+    }
+    if (mobileMenuToggle) {
+      mobileMenuToggle.setAttribute('aria-expanded', 'false');
+    }
     document.body.style.overflow = '';
   }
 
@@ -229,10 +231,10 @@ document.addEventListener('DOMContentLoaded', () => {
      5. ACTIVE NAVIGATION LINK ON SCROLL (SCROLL-SPY)
      =================================================================== */
   const sections = document.querySelectorAll('section[id]');
-  const desktopLinks = document.querySelectorAll('.nav-link');
+  const desktopLinks = document.querySelectorAll('#desktop-nav .nav-link');
 
   function updateActiveNavLink() {
-    const scrollPosition = window.scrollY + 120;
+    const scrollPosition = window.scrollY + 140;
 
     sections.forEach(section => {
       const sectionTop = section.offsetTop;
@@ -275,8 +277,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }, {
       root: null,
-      threshold: 0.12,
-      rootMargin: '0px 0px -40px 0px'
+      threshold: 0.1,
+      rootMargin: '0px 0px -30px 0px'
     });
 
     revealElements.forEach(el => revealObserver.observe(el));
@@ -285,59 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ===================================================================
-     7. ANIMATED COUNTERS FOR STATS & MILESTONES
-     =================================================================== */
-  const counterElements = document.querySelectorAll('[data-counter]');
-
-  if ('IntersectionObserver' in window && counterElements.length > 0) {
-    const counterObserver = new IntersectionObserver((entries, observer) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const el = entry.target;
-          const targetValue = parseInt(el.getAttribute('data-counter'), 10);
-          const suffix = el.getAttribute('data-suffix') || '';
-          animateCounter(el, targetValue, suffix);
-          observer.unobserve(el);
-        }
-      });
-    }, {
-      threshold: 0.5
-    });
-
-    counterElements.forEach(el => counterObserver.observe(el));
-  }
-
-  function animateCounter(element, target, suffix) {
-    if (isNaN(target)) return;
-
-    let start = 0;
-    const duration = 1600; // ms
-    const startTime = performance.now();
-
-    if (target > 1000) {
-      start = target - 30;
-    }
-
-    function step(currentTime) {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easeProgress = 1 - Math.pow(1 - progress, 3);
-      const current = Math.floor(start + (target - start) * easeProgress);
-
-      element.textContent = current + suffix;
-
-      if (progress < 1) {
-        requestAnimationFrame(step);
-      } else {
-        element.textContent = target + suffix;
-      }
-    }
-
-    requestAnimationFrame(step);
-  }
-
-  /* ===================================================================
-     8. BACK-TO-TOP BUTTONS
+     7. BACK-TO-TOP BUTTONS
      =================================================================== */
   const footerBackToTop = document.getElementById('footer-back-to-top');
 
@@ -357,161 +307,59 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ===================================================================
-     9. INTERACTIVE PROJECT DETAILS MODAL
+     8. AMAZON CERTIFICATE LIGHTBOX MODAL
      =================================================================== */
-  const openModalButtons = document.querySelectorAll('.open-modal-btn');
-  const closeModalButtons = document.querySelectorAll('[data-close-modal]');
-  const modalOverlays = document.querySelectorAll('.modal-overlay');
+  const certModal = document.getElementById('cert-modal');
+  const certThumbTrigger = document.getElementById('cert-thumb-trigger');
+  const openCertModalBtn = document.getElementById('open-cert-modal-btn');
+  const certModalClose = document.getElementById('cert-modal-close');
+  const certModalDismissBtn = document.getElementById('cert-modal-dismiss-btn');
 
-  openModalButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const modalId = btn.getAttribute('data-modal');
-      const targetModal = document.getElementById(modalId);
-      if (targetModal) {
-        openModal(targetModal);
+  function openCertificateModal() {
+    if (certModal) {
+      certModal.classList.add('active');
+      certModal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      if (certModalClose) certModalClose.focus();
+    }
+  }
+
+  function closeCertificateModal() {
+    if (certModal) {
+      certModal.classList.remove('active');
+      certModal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+  }
+
+  if (certThumbTrigger) {
+    certThumbTrigger.addEventListener('click', openCertificateModal);
+  }
+
+  if (openCertModalBtn) {
+    openCertModalBtn.addEventListener('click', openCertificateModal);
+  }
+
+  if (certModalClose) {
+    certModalClose.addEventListener('click', closeCertificateModal);
+  }
+
+  if (certModalDismissBtn) {
+    certModalDismissBtn.addEventListener('click', closeCertificateModal);
+  }
+
+  if (certModal) {
+    certModal.addEventListener('click', (e) => {
+      if (e.target === certModal) {
+        closeCertificateModal();
       }
     });
-  });
-
-  closeModalButtons.forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const modal = btn.closest('.modal-overlay');
-      if (modal) {
-        closeModal(modal);
-      }
-    });
-  });
-
-  modalOverlays.forEach(overlay => {
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        closeModal(overlay);
-      }
-    });
-  });
+  }
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      const activeModal = document.querySelector('.modal-overlay.active');
-      if (activeModal) {
-        closeModal(activeModal);
-      }
+    if (e.key === 'Escape' && certModal && certModal.classList.contains('active')) {
+      closeCertificateModal();
     }
   });
-
-  function openModal(modal) {
-    modal.classList.add('active');
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-
-    const closeBtn = modal.querySelector('.modal-close-btn');
-    if (closeBtn) closeBtn.focus();
-  }
-
-  function closeModal(modal) {
-    modal.classList.remove('active');
-    modal.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-  }
-
-  /* ===================================================================
-     10. CONTACT FORM LOCALIZED VALIDATION & FEEDBACK
-     =================================================================== */
-  const contactForm = document.getElementById('portfolio-contact-form');
-  const feedbackAlert = document.getElementById('form-feedback-alert');
-
-  if (contactForm) {
-    const fullNameInput = document.getElementById('fullname');
-    const emailInput = document.getElementById('email');
-    const subjectInput = document.getElementById('subject');
-    const messageInput = document.getElementById('message');
-
-    fullNameInput.addEventListener('input', () => validateField(fullNameInput, 'group-fullname', val => val.trim().length >= 2));
-    emailInput.addEventListener('input', () => validateField(emailInput, 'group-email', isValidEmail));
-    subjectInput.addEventListener('input', () => validateField(subjectInput, 'group-subject', val => val.trim().length >= 3));
-    messageInput.addEventListener('input', () => validateField(messageInput, 'group-message', val => val.trim().length >= 15));
-
-    contactForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const isNameValid = validateField(fullNameInput, 'group-fullname', val => val.trim().length >= 2);
-      const isEmailValid = validateField(emailInput, 'group-email', isValidEmail);
-      const isSubjectValid = validateField(subjectInput, 'group-subject', val => val.trim().length >= 3);
-      const isMessageValid = validateField(messageInput, 'group-message', val => val.trim().length >= 15);
-
-      const dict = getTranslations(currentLang) || getTranslations('en') || {};
-
-      if (isNameValid && isEmailValid && isSubjectValid && isMessageValid) {
-        const nameVal = fullNameInput.value.trim();
-        const subjectVal = encodeURIComponent(subjectInput.value.trim());
-        const messageVal = encodeURIComponent(
-          `From: ${nameVal}\nEmail: ${emailInput.value.trim()}\n\nMessage:\n${messageInput.value.trim()}`
-        );
-
-        const successTitle = dict.form_feedback_success_title || "Inquiry Prepared Successfully!";
-        const successDesc = (dict.form_feedback_success_desc || "Thank you, {name}. Your contact form inputs are valid.").replace('{name}', `<strong>${escapeHTML(nameVal)}</strong>`);
-        const sendBtnText = dict.form_feedback_send_btn || "Send via Email Client";
-        const altPhone = dict.form_feedback_alt_phone || "Or connect directly by phone at 01141477899.";
-
-        feedbackAlert.className = 'form-status-alert success';
-        feedbackAlert.innerHTML = `
-          <strong>${successTitle}</strong><br>
-          ${successDesc}
-          <div style="margin-top: 10px;">
-            <a href="mailto:essamhashem1000@gmail.com?subject=${subjectVal}&body=${messageVal}" class="btn btn-primary btn-sm" style="display: inline-flex; margin-top: 4px;">
-              <span>${sendBtnText}</span>
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-            </a>
-            <span style="display: block; font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">
-              ${altPhone}
-            </span>
-          </div>
-        `;
-
-        contactForm.reset();
-        [fullNameInput, emailInput, subjectInput, messageInput].forEach(input => {
-          input.closest('.form-group').classList.remove('has-error');
-        });
-      } else {
-        feedbackAlert.className = 'form-status-alert error';
-        feedbackAlert.textContent = dict.form_feedback_error || 'Please correct the highlighted fields above before submitting.';
-
-        const firstInvalid = contactForm.querySelector('.has-error input, .has-error textarea');
-        if (firstInvalid) firstInvalid.focus();
-      }
-    });
-  }
-
-  function validateField(inputElement, groupId, validatorFn) {
-    const group = document.getElementById(groupId);
-    if (!group) return true;
-
-    const isValid = validatorFn(inputElement.value);
-    if (!isValid) {
-      group.classList.add('has-error');
-    } else {
-      group.classList.remove('has-error');
-    }
-    return isValid;
-  }
-
-  function isValidEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(String(email).toLowerCase());
-  }
-
-  function escapeHTML(str) {
-    return str.replace(/[&<>'"]/g, 
-      tag => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        "'": '&#39;',
-        '"': '&quot;'
-      }[tag] || tag)
-    );
-  }
 
 });
